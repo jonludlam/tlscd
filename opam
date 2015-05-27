@@ -8,6 +8,7 @@ remove: [
   [make "uninstall" "BINDIR=%{bin}%" "MANDIR=%{man}%"]
 ]
 depends: [
+  "oasis"
   "async"
   "async_ssl" 
   "core"
