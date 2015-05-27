@@ -1,0 +1,25 @@
+OASISFormat: 0.2
+Name:        tlscd
+Version:     0.1
+Synopsis:    Daemon to do TLS wrapping/unwrapping
+Authors:     Jon Ludlam
+License:     LGPL-2.1 with OCaml linking exception
+Plugins:     META (0.2)
+BuildTools:  ocamlbuild
+
+Executable tlsd
+  CompiledObject:     best
+  Path:               src
+  MainIs:             tlsd.ml
+  Custom:             true
+  Install:            false
+  BuildDepends:       threads, sexplib, sexplib.syntax, async, async_ssl, cmdliner
+
+Executable tlsc
+  CompiledObject:     best
+  Path:               src
+  MainIs:             tlsc.ml
+  Custom:             true
+  Install:            false
+  BuildDepends:       threads, sexplib, sexplib.syntax, async, async_ssl, cmdliner
+
