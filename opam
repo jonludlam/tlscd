@@ -8,9 +8,8 @@ remove: [
   [make "uninstall" "BINDIR=%{bin}%" "MANDIR=%{man}%"]
 ]
 depends: [
-  "xapi-idl"
   "async"
   "async_ssl" 
   "core"
-  "message-switch"
+  "cmdliner"
 ]
