@@ -1,6 +1,8 @@
 TLS client/server pair
 ----------------------
 
+[![Build Status](https://travis-ci.org/jonludlam/tlscd.svg?branch=master)](https://travis-ci.org/jonludlam/tlscd)
+
 To test using a browser:
 
     make
