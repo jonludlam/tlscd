@@ -46,4 +46,4 @@ test:
 	@echo No tests implemented yet
 
 clean:
-	rm -rf _build setup.data tlsc.1 tlsd.1 tlsc.native tlsd.native version.ml myocamlbuild.ml setup.log setup.ml
+	rm -rf _build setup.data tlsc.1 tlsd.1 tlsc.native tlsd.native version.ml myocamlbuild.ml setup.log setup.ml tlsd.pem
