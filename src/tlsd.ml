@@ -1,3 +1,17 @@
+(*
+ * Copyright (C) 2015 Citrix Systems Inc.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation; version 2.1 only. with the special
+ * exception on linking described in file LICENSE.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *)
+
 open Core.Std
 open Async.Std
   
@@ -6,7 +20,8 @@ let ssl_blocks cert buffer r w dest_host dest_port =
   let ssl_to_net = Writer.pipe w in
   let app_to_ssl, app_wr = Pipe.create () in
   let app_rd, ssl_to_app = Pipe.create () in
-  let th = Async_ssl.Ssl.server
+
+  let conn = Async_ssl.Ssl.server
       ~crt_file:cert
       ~key_file:cert
       ~app_to_ssl
@@ -14,10 +29,19 @@ let ssl_blocks cert buffer r w dest_host dest_port =
       ~net_to_ssl
       ~ssl_to_net ()
   in
-  Deferred.Or_error.(th >>= fun x -> 
+
+  (* When this thread is determined, we've done the initial TLS handshake.
+     We can then decide whether or not to send info down the channel. The
+     following shows how we can make a decision based on the handshake
+     version.
+
+     What we don't have is any control over the ciphers / key exchanges
+     used. *)
+
+  Deferred.Or_error.(conn >>= fun x -> 
     let open Async_ssl.Ssl in
     let v = Connection.version x in
-    let str = 
+    let _ = 
       match v with
       | Version.Sslv23 -> "sslv23"
       | Version.Sslv3 -> "sslv3"
@@ -26,13 +50,16 @@ let ssl_blocks cert buffer r w dest_host dest_port =
       | Version.Tlsv1_2 -> "tlsv1_2"
     in
     return ()) >>= fun _ ->
-  let th = 
+
+  (* Having decided the handshake is OK, we start pumping data around *)
+
+  let pump = 
     Tcp.connect (Tcp.to_host_and_port dest_host dest_port)
     >>= fun (_, rd, wr) ->
     Deferred.all_ignore
       [ Pipe.transfer_id app_rd (Writer.pipe wr);
         Pipe.transfer_id (Reader.pipe rd) app_wr ]
-  in th
+  in pump
 
 (** Starts a TCP server, which listens on the specified port, invoking
     copy_blocks every time a client connects. *)
@@ -56,7 +83,7 @@ open Cmdliner
 
 let cert =
   let doc = "Certificate file" in
-  Arg.(value & opt file "/dev/null" & info ["c"; "cert"] ~doc)
+  Arg.(required & opt (some file) None & info ["c"; "cert"] ~doc)
 
 let host =
   let doc = "Host to proxy to" in
